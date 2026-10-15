@@ -8,7 +8,7 @@ const RANDOM_MENU_POOL = [
   "냉면", "쌀국수", "마라탕", "짜장면", "짬뽕", "탕수육",
   "초밥", "회덮밥", "파스타", "피자", "햄버거", "샌드위치",
   "치킨", "떡볶이", "카레", "샐러드", "찜닭", "닭갈비",
-  "곱창", "보쌈", "샤브샤브", "오므라이스", "우동", "라멘"
+  "곱창", "보쌈", "샤브샤브", "오므라이스", "우동", "라멘", "떡국", "삼계탕"
 ];
 const RANDOM_MENU_COUNT = 10;
 const GROUP_MENU_RECOMMENDATIONS = {
@@ -23,8 +23,33 @@ const MENU_CATEGORIES = {
   양식: ["파스타", "피자", "햄버거", "샌드위치", "샐러드", "오므라이스"],
   분식: ["떡볶이"],
   아시아: ["쌀국수"],
+  계절·보양식: ["떡국", "삼계탕"],
   고기·모임: ["삼겹살", "치킨", "곱창", "샤브샤브", "족발", "해물찜", "곱창전골", "불고기전골"]
 };
+const SPECIAL_DAY_RECOMMENDATIONS = {
+  "01-01": { occasion: "새해 첫날", menu: "떡국", description: "따뜻한 떡국 한 그릇으로 새해를 든든하게 시작해요!" },
+  "02-14": { occasion: "밸런타인데이", menu: "파스타", description: "좋아하는 사람과 파스타를 나누며 달콤한 하루를 보내세요." },
+  "03-14": { occasion: "화이트데이", menu: "초밥", description: "산뜻한 초밥으로 마음을 전하는 특별한 식사를 즐겨보세요." },
+  "04-14": { occasion: "블랙데이", menu: "짜장면", description: "오늘은 짜장면 한 그릇으로 기분 좋게 블랙데이를 즐겨봐요." },
+  "05-05": { occasion: "어린이날", menu: "치킨", description: "온 가족이 좋아하는 치킨으로 신나는 하루를 함께해요!" },
+  "05-08": { occasion: "어버이날", menu: "불고기", description: "정성스럽게 구운 불고기로 감사한 마음을 전해보세요." },
+  "07-07": { occasion: "칠석", menu: "칼국수", description: "칠석에는 길게 이어지는 국수 한 그릇으로 정겨운 식사를 즐겨요." },
+  "08-15": { occasion: "광복절", menu: "비빔밥", description: "여러 재료가 어우러지는 비빔밥으로 뜻깊은 하루를 기념해요." },
+  "10-31": { occasion: "할로윈", menu: "카레", description: "달콤한 호박을 곁들인 카레로 할로윈 분위기를 내보세요." },
+  "11-11": { occasion: "빼빼로데이", menu: "떡볶이", description: "매콤달콤한 떡볶이와 달콤한 간식으로 즐거운 하루를 보내요." },
+  "12-25": { occasion: "크리스마스", menu: "피자", description: "따뜻한 피자를 나누며 포근한 크리스마스 식탁을 만들어봐요." }
+};
+const BOKNAL_RECOMMENDATIONS_2026 = {
+  "07-15": { occasion: "초복", menu: "삼계탕", description: "초복에는 따끈한 삼계탕으로 여름 기운을 든든하게 채워봐요." },
+  "07-25": { occasion: "중복", menu: "삼계탕", description: "중복 더위에는 삼계탕 한 그릇으로 몸과 마음을 챙겨보세요." },
+  "08-14": { occasion: "말복", menu: "삼계탕", description: "말복에는 보양식 삼계탕으로 여름 더위를 건강하게 마무리해요." }
+};
+const SEASONAL_RECOMMENDATIONS = [
+  { months: [12, 1, 2], menu: "김치찌개", description: "쌀쌀한 날씨에는 보글보글 끓인 김치찌개가 속까지 따뜻하게 해줘요." },
+  { months: [3, 4, 5], menu: "비빔밥", description: "싱그러운 제철 채소를 듬뿍 넣은 비빔밥으로 가볍고 든든하게 즐겨요." },
+  { months: [6, 7, 8], menu: "냉면", description: "더운 날에는 시원하고 새콤한 냉면으로 입맛을 깨워보세요." },
+  { months: [9, 10, 11], menu: "불고기", description: "선선한 계절, 따뜻한 불고기로 든든하고 포근한 한 끼를 즐겨요." }
+];
 const COLORS = ["#f3b6aa", "#f5dda0", "#c4d9b7", "#b4dcd0", "#b8cbed", "#d3c0e2", "#f0bdcd", "#f1e1aa", "#acd6e2", "#e9c1a8", "#d2dfae", "#e2b9d3"];
 const NUTRITION_PER_SERVING = {
   "김치찌개": { calories: 350, protein: 22 },
@@ -67,7 +92,9 @@ const NUTRITION_PER_SERVING = {
   "감자탕": { calories: 600, protein: 35 },
   "해물찜": { calories: 500, protein: 35 },
   "곱창전골": { calories: 650, protein: 28 },
-  "불고기전골": { calories: 550, protein: 32 }
+  "불고기전골": { calories: 550, protein: 32 },
+  "떡국": { calories: 470, protein: 18 },
+  "삼계탕": { calories: 900, protein: 65 }
 };
 
 const wheel = document.querySelector("#roulette-wheel");
@@ -84,6 +111,10 @@ const partySize = document.querySelector("#party-size");
 const recommendButton = document.querySelector("#recommend-button");
 const categoryTabs = document.querySelector("#category-tabs");
 const categoryMenuList = document.querySelector("#category-menu-list");
+const todayPickLabel = document.querySelector("#today-pick-label");
+const todayPickMenu = document.querySelector("#today-pick-menu");
+const todayPickDescription = document.querySelector("#today-pick-description");
+const todayPickAdd = document.querySelector("#today-pick-add");
 const message = document.querySelector("#message");
 const emptyState = document.querySelector("#empty-state");
 
@@ -93,6 +124,35 @@ let isSpinning = false;
 let currentRotation = 0;
 let spinTimer;
 let selectedCategory = Object.keys(MENU_CATEGORIES)[0];
+let todayRecommendation = getTodayRecommendation();
+
+function getTodayRecommendation() {
+  const today = new Date();
+  const dateKey = `${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const specialDay = SPECIAL_DAY_RECOMMENDATIONS[dateKey]
+    ?? (today.getFullYear() === 2026 ? BOKNAL_RECOMMENDATIONS_2026[dateKey] : undefined);
+  if (specialDay) return { ...specialDay, isSpecialDay: true };
+
+  const seasonal = SEASONAL_RECOMMENDATIONS.find((recommendation) => recommendation.months.includes(today.getMonth() + 1));
+  return {
+    occasion: "계절 메뉴 추천",
+    menu: seasonal.menu,
+    description: seasonal.description,
+    isSpecialDay: false
+  };
+}
+
+function renderTodayRecommendation() {
+  todayPickLabel.textContent = todayRecommendation.isSpecialDay
+    ? `TODAY'S SPECIAL · ${todayRecommendation.occasion}`
+    : "TODAY'S SEASONAL PICK";
+  todayPickMenu.textContent = todayRecommendation.menu;
+  todayPickDescription.textContent = todayRecommendation.description;
+
+  const alreadyAdded = menus.includes(todayRecommendation.menu);
+  todayPickAdd.disabled = alreadyAdded || isSpinning;
+  todayPickAdd.textContent = alreadyAdded ? "이미 후보에 있어요" : "후보에 추가";
+}
 
 function loadMenus() {
   try {
@@ -187,6 +247,7 @@ function render() {
   randomMenuButton.disabled = isSpinning;
   partySize.disabled = isSpinning;
   recommendButton.disabled = isSpinning;
+  renderTodayRecommendation();
   renderCategoryMenus();
   spinHint.textContent = menus.length < 2
     ? "메뉴를 2개 이상 담으면 시작할 수 있어요."
@@ -399,6 +460,7 @@ menuForm.addEventListener("submit", (event) => {
 spinButton.addEventListener("click", spin);
 randomMenuButton.addEventListener("click", setRandomMenus);
 recommendButton.addEventListener("click", recommendGroupMenus);
+todayPickAdd.addEventListener("click", () => addMenu(todayRecommendation.menu, false));
 
 clearButton.addEventListener("click", () => {
   if (menus.length === 0) {

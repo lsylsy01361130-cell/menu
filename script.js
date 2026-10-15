@@ -16,6 +16,15 @@ const GROUP_MENU_RECOMMENDATIONS = {
   medium: ["삼겹살", "샤브샤브", "찜닭", "닭갈비", "보쌈", "족발", "감자탕", "곱창", "피자", "치킨"],
   large: ["족발", "감자탕", "해물찜", "곱창전골", "불고기전골", "보쌈", "삼겹살", "치킨", "피자", "찜닭"]
 };
+const MENU_CATEGORIES = {
+  한식: ["김치찌개", "된장찌개", "순두부찌개", "부대찌개", "김치볶음밥", "비빔밥", "제육볶음", "불고기", "국밥", "칼국수", "냉면", "회덮밥", "카레", "찜닭", "닭갈비", "보쌈", "감자탕"],
+  중식: ["마라탕", "짜장면", "짬뽕", "탕수육"],
+  일식: ["돈까스", "초밥", "우동", "라멘"],
+  양식: ["파스타", "피자", "햄버거", "샌드위치", "샐러드", "오므라이스"],
+  분식: ["떡볶이"],
+  아시아: ["쌀국수"],
+  고기·모임: ["삼겹살", "치킨", "곱창", "샤브샤브", "족발", "해물찜", "곱창전골", "불고기전골"]
+};
 const COLORS = ["#f3b6aa", "#f5dda0", "#c4d9b7", "#b4dcd0", "#b8cbed", "#d3c0e2", "#f0bdcd", "#f1e1aa", "#acd6e2", "#e9c1a8", "#d2dfae", "#e2b9d3"];
 const NUTRITION_PER_SERVING = {
   "김치찌개": { calories: 350, protein: 22 },
@@ -73,6 +82,8 @@ const clearButton = document.querySelector("#clear-button");
 const randomMenuButton = document.querySelector("#random-menu-button");
 const partySize = document.querySelector("#party-size");
 const recommendButton = document.querySelector("#recommend-button");
+const categoryTabs = document.querySelector("#category-tabs");
+const categoryMenuList = document.querySelector("#category-menu-list");
 const message = document.querySelector("#message");
 const emptyState = document.querySelector("#empty-state");
 
@@ -81,6 +92,7 @@ let menus = loadMenus();
 let isSpinning = false;
 let currentRotation = 0;
 let spinTimer;
+let selectedCategory = Object.keys(MENU_CATEGORIES)[0];
 
 function loadMenus() {
   try {
@@ -175,10 +187,60 @@ function render() {
   randomMenuButton.disabled = isSpinning;
   partySize.disabled = isSpinning;
   recommendButton.disabled = isSpinning;
+  renderCategoryMenus();
   spinHint.textContent = menus.length < 2
     ? "메뉴를 2개 이상 담으면 시작할 수 있어요."
     : isSpinning ? "오늘의 메뉴를 고르고 있어요..." : "두근두근, 오늘의 메뉴를 골라볼까요?";
   renderWheel();
+}
+
+function renderCategoryMenus() {
+  categoryTabs.replaceChildren();
+  categoryMenuList.replaceChildren();
+
+  for (const category of Object.keys(MENU_CATEGORIES)) {
+    const tab = document.createElement("button");
+    tab.className = "category-tab";
+    tab.type = "button";
+    tab.textContent = category;
+    tab.setAttribute("aria-pressed", String(category === selectedCategory));
+    tab.disabled = isSpinning;
+    tab.addEventListener("click", () => {
+      selectedCategory = category;
+      renderCategoryMenus();
+    });
+    categoryTabs.append(tab);
+  }
+
+  for (const name of MENU_CATEGORIES[selectedCategory]) {
+    const isAdded = menus.includes(name);
+    const menuButton = document.createElement("button");
+    menuButton.className = "category-menu-button";
+    menuButton.type = "button";
+    menuButton.disabled = isAdded || isSpinning;
+    menuButton.setAttribute("aria-label", isAdded ? `${name}, 이미 후보에 추가됨` : `${name} 후보에 추가`);
+
+    const nameLabel = document.createElement("span");
+    nameLabel.textContent = name;
+    menuButton.append(nameLabel);
+
+    const nutritionInfo = NUTRITION_PER_SERVING[name];
+    if (nutritionInfo) {
+      const nutrition = document.createElement("small");
+      nutrition.textContent = `${nutritionInfo.calories} kcal · 단백질 ${nutritionInfo.protein} g`;
+      menuButton.append(nutrition);
+    }
+
+    if (isAdded) {
+      const addedLabel = document.createElement("span");
+      addedLabel.className = "category-added-label";
+      addedLabel.textContent = "추가됨";
+      menuButton.append(addedLabel);
+    }
+
+    menuButton.addEventListener("click", () => addMenu(name, false));
+    categoryMenuList.append(menuButton);
+  }
 }
 
 function renderWheel() {
@@ -227,16 +289,16 @@ function polarPoint(cx, cy, radius, degrees) {
   return { x: cx + radius * Math.cos(radians), y: cy + radius * Math.sin(radians) };
 }
 
-function addMenu(value) {
+function addMenu(value, focusInputOnError = true) {
   const name = value.trim();
   if (!name) {
     showMessage("메뉴 이름을 입력해 주세요.");
-    menuInput.focus();
+    if (focusInputOnError) menuInput.focus();
     return;
   }
   if (menus.some((menu) => menu.toLocaleLowerCase() === name.toLocaleLowerCase())) {
     showMessage("이미 추가된 메뉴예요.");
-    menuInput.focus();
+    if (focusInputOnError) menuInput.focus();
     return;
   }
 

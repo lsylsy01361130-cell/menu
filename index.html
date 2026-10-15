@@ -77,6 +77,14 @@
               <input id="menu-input" name="menu" type="text" maxlength="40" placeholder="예: 김치찌개" autocomplete="off">
               <button type="submit" class="add-button"><span aria-hidden="true">＋</span> 추가</button>
             </form>
+            <section class="category-picker" aria-labelledby="category-heading">
+              <div class="category-heading-row">
+                <h3 id="category-heading">카테고리별 메뉴</h3>
+                <span>메뉴를 눌러 후보에 추가</span>
+              </div>
+              <div id="category-tabs" class="category-tabs" role="group" aria-label="메뉴 카테고리"></div>
+              <div id="category-menu-list" class="category-menu-list" aria-label="선택한 카테고리 메뉴"></div>
+            </section>
             <button id="random-menu-button" class="random-menu-button" type="button">
               <span aria-hidden="true">✦</span> 전체 메뉴를 랜덤으로
             </button>
